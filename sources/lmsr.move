@@ -81,7 +81,7 @@ public fun payout(index: u64, quantity: u64, quantities: vector<u64>, liquidity_
 
     let mut i = 0;
     let new_quantities = quantities.map!(|current| {
-        let new_quantity = if (i == index) current + quantity else current;
+        let new_quantity = if (i == index) current - quantity else current;
 
         i = i + 1;
         new_quantity
