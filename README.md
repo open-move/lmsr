@@ -1,20 +1,27 @@
 # LMSR
 
-Logarithmic Market Scoring Rule for prediction markets on Sui.
+An implementation of the Logarithmic Market Scoring Rule (LMSR) in Sui Move.
 
-Automated market maker for prediction markets with continuous liquidity.
+LMSR is an automated market maker designed for prediction markets. It provides continuous liquidity and automatic price discovery which ensures that traders can always buy or sell outcome shares while maintaining proper probabilistic pricing that sums to 1.
 
 ## Installation
 
 Add to your `Move.toml`:
+
 ```toml
 [dependencies]
+
 lmsr = { git = "https://github.com/open-move/lmsr.git", rev = "main" }
+```
+
+```bash
+sui move build
+sui move test
 ```
 
 ## Usage
 
-```move
+```rust
 use lmsr::lmsr;
 
 // Create market with 3 outcomes
@@ -35,14 +42,9 @@ let payout = lmsr::payout(1, 20, quantities, liquidity);
 ## Functions
 
 - `base_cost(quantities, b)` - Total market cost
-- `price(quantities, index, b)` - Single outcome price  
+- `price(quantities, index, b)` - Single outcome price
 - `prices(quantities, b)` - All outcome prices
 - `cost(index, amount, quantities, b)` - Buy cost
 - `payout(index, amount, quantities, b)` - Sell payout
 
 ## Build & Test
-
-```bash
-sui move build
-sui move test
-```
