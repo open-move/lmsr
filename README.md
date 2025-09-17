@@ -14,6 +14,8 @@ Add to your `Move.toml`:
 lmsr = { git = "https://github.com/open-move/lmsr.git", rev = "main" }
 ```
 
+## Build & Test
+
 ```bash
 sui move build
 sui move test
@@ -46,5 +48,3 @@ let payout = lmsr::payout(1, 20, quantities, liquidity);
 - `prices(quantities, b)` - All outcome prices
 - `cost(index, amount, quantities, b)` - Buy cost
 - `payout(index, amount, quantities, b)` - Sell payout
-
-## Build & Test
