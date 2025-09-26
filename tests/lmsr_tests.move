@@ -8,7 +8,8 @@ use std::unit_test::assert_eq;
 fun test_base_cost() {
     let liquidity = 1000;
     let quantities = vector[100, 100];
-    let cost = lmsr::base_cost(quantities, liquidity);
+    let decimals = 6u8;
+    let cost = lmsr::base_cost(quantities, liquidity, decimals);
 
     // A combination the above parameters should always yield a certain base cost
     assert_eq!(cost, 793147180);
@@ -18,25 +19,27 @@ fun test_base_cost() {
 fun test_prices_initial() {
     let liquidity = 1000;
     let quantities = vector[0, 0];
+    let decimals = 6u8;
 
-    let price_0 = lmsr::price(quantities, 0, liquidity);
-    let price_1 = lmsr::price(quantities, 1, liquidity);
+    let price_0 = lmsr::price(quantities, 0, liquidity, decimals);
+    let price_1 = lmsr::price(quantities, 1, liquidity, decimals);
 
     // Both outcomes should have equal price initially
     assert_eq!(price_0, price_1);
-    assert_eq!(price_0, 10u64.pow(lmsr::precision_decimals!()) / 2);
+    assert_eq!(price_0, 10u64.pow(decimals) / 2);
 }
 
 #[test]
 fun test_prices_summation() {
     let liquidity = 1000;
     let quantities = vector[100, 150, 200];
+    let decimals = 6u8;
 
-    let prices = lmsr::prices(quantities, liquidity);
+    let prices = lmsr::prices(quantities, liquidity, decimals);
     let prices_sum = prices.fold!(0, |acc, x| acc + x);
 
     let tolerance = 10; // Allow small rounding error
-    let one = 10u64.pow(lmsr::precision_decimals!());
+    let one = 10u64.pow(decimals);
     assert!(prices_sum >= one - tolerance && prices_sum <= one + tolerance);
 }
 
@@ -44,10 +47,11 @@ fun test_prices_summation() {
 fun test_const_difference() {
     let quantities = vector[100, 100];
     let liquidity = 1000;
+    let decimals = 6u8;
 
     // Cost for different quantities
-    let cost_10 = lmsr::cost(0, 10, quantities, liquidity);
-    let cost_20 = lmsr::cost(0, 20, quantities, liquidity);
+    let cost_10 = lmsr::cost(0, 10, quantities, liquidity, decimals);
+    let cost_20 = lmsr::cost(0, 20, quantities, liquidity, decimals);
     assert!(cost_20 > cost_10);
 }
 
@@ -55,29 +59,33 @@ fun test_const_difference() {
 fun test_empty_quantities_fails() {
     let empty = vector[];
     let liquidity = 1000;
-    lmsr::base_cost(empty, liquidity);
+    let decimals = 6u8;
+    lmsr::base_cost(empty, liquidity, decimals);
 }
 
 #[test, expected_failure(abort_code = lmsr::EInvalidLiquidityParam)]
 fun test_zero_liquidity_fails() {
     let quantities = vector[100, 100];
-    lmsr::base_cost(quantities, 0);
+    let decimals = 6u8;
+    lmsr::base_cost(quantities, 0, decimals);
 }
 
 #[test, expected_failure(abort_code = lmsr::EInvalidOutcomeQuantityIndex)]
 fun test_invalid_index_fails() {
     let quantities = vector[100, 100];
     let liquidity = 1000;
+    let decimals = 6u8;
 
     // Try to get price for non-existent outcome 2
-    lmsr::price(quantities, 2, liquidity);
+    lmsr::price(quantities, 2, liquidity, decimals);
 }
 
 #[test, expected_failure(abort_code = lmsr::EInvalidOutcomesQuantities)]
 fun test_sell_more_than_available_fails() {
     let quantities = vector[50, 100];
     let liquidity = 1000;
+    let decimals = 6u8;
 
     // Try to sell 100 when only 50 available
-    lmsr::payout(0, 100, quantities, liquidity);
+    lmsr::payout(0, 100, quantities, liquidity, decimals);
 }
