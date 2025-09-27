@@ -13,7 +13,7 @@ const EInvalidOutcomeQuantityIndex: u64 = 3;
 const EOutcomeQuantityOverflow: u64 = 4;
 
 /// Calculate LMSR cost function: C(q) = b * ln(Σe^(qi/b))
-public fun base_cost(quantities: vector<u64>, liquidity_param: u64, decimals: u8): u64 {
+public fun base_cost(quantities: vector<u64>, liquidity_param: u64): u64 {
     assert!(!quantities.is_empty(), EEmptyOutcomesQuantities);
     assert!(liquidity_param != 0, EInvalidLiquidityParam);
 
@@ -21,7 +21,7 @@ public fun base_cost(quantities: vector<u64>, liquidity_param: u64, decimals: u8
     let quantities_scaled = quantities.map!(|q| fixed18::from_u64(q));
     liquidity_param_scaled
         .mul_down(log_sum_exp_scaled(quantities_scaled, liquidity_param_scaled))
-        .to_u64(decimals)
+        .to_u64(0)
 }
 
 public fun price(quantities: vector<u64>, index: u64, liquidity_param: u64, decimals: u8): u64 {
@@ -57,14 +57,13 @@ public fun cost(
     quantity: u64,
     quantities: vector<u64>,
     liquidity_param: u64,
-    decimals: u8,
 ): u64 {
     assert!(!quantities.is_empty(), EEmptyOutcomesQuantities);
     assert!(quantity != 0, EInvalidOutcomesQuantities);
     assert!(liquidity_param != 0, EInvalidLiquidityParam);
     assert!(index < quantities.length(), EInvalidOutcomeQuantityIndex);
 
-    let current_cost = base_cost(quantities, liquidity_param, decimals);
+    let current_cost = base_cost(quantities, liquidity_param);
 
     let mut i = 0;
     let new_quantities = quantities.map!(|current| {
@@ -80,7 +79,7 @@ public fun cost(
         new_quantity
     });
 
-    base_cost(new_quantities, liquidity_param, decimals) - current_cost
+    base_cost(new_quantities, liquidity_param) - current_cost
 }
 
 /// Calculate payout for selling specific number of quantities for given outcome
@@ -89,7 +88,6 @@ public fun payout(
     quantity: u64,
     quantities: vector<u64>,
     liquidity_param: u64,
-    decimals: u8,
 ): u64 {
     assert!(!quantities.is_empty(), EEmptyOutcomesQuantities);
     assert!(quantity != 0, EInvalidOutcomesQuantities);
@@ -97,7 +95,7 @@ public fun payout(
     assert!(index < quantities.length(), EInvalidOutcomeQuantityIndex);
     assert!(quantities[index] >= quantity, EInvalidOutcomesQuantities);
 
-    let current_cost = base_cost(quantities, liquidity_param, decimals);
+    let current_cost = base_cost(quantities, liquidity_param);
 
     let mut i = 0;
     let new_quantities = quantities.map!(|current| {
@@ -111,7 +109,7 @@ public fun payout(
         new_quantity
     });
 
-    current_cost - base_cost(new_quantities, liquidity_param, decimals)
+    current_cost - base_cost(new_quantities, liquidity_param)
 }
 
 // === Private Functions ===
