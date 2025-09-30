@@ -13,7 +13,7 @@ const EInvalidOutcomeQuantityIndex: u64 = 3;
 const EOutcomeQuantityOverflow: u64 = 4;
 
 /// Calculate LMSR cost function: C(q) = b * ln(Σe^(qi/b))
-public fun base_cost(quantities: vector<u64>, liquidity_param: u64): u64 {
+public fun base_cost(quantities: vector<u64>, liquidity_param: u64, decimals: u8): u64 {
     assert!(!quantities.is_empty(), EEmptyOutcomesQuantities);
     assert!(liquidity_param != 0, EInvalidLiquidityParam);
 
@@ -21,7 +21,7 @@ public fun base_cost(quantities: vector<u64>, liquidity_param: u64): u64 {
     let quantities_scaled = quantities.map!(|q| fixed18::from_u64(q));
     liquidity_param_scaled
         .mul_down(log_sum_exp_scaled(quantities_scaled, liquidity_param_scaled))
-        .to_u64(0)
+        .to_u64(decimals)
 }
 
 public fun price(quantities: vector<u64>, index: u64, liquidity_param: u64, decimals: u8): u64 {
@@ -52,18 +52,13 @@ public fun prices(quantities: vector<u64>, liquidity_param: u64, decimals: u8): 
 }
 
 /// Calculate cost to purchase specific number of quantities for given outcome
-public fun cost(
-    index: u64,
-    quantity: u64,
-    quantities: vector<u64>,
-    liquidity_param: u64,
-): u64 {
+public fun cost(index: u64, quantity: u64, quantities: vector<u64>, liquidity_param: u64, decimals: u8): u64 {
     assert!(!quantities.is_empty(), EEmptyOutcomesQuantities);
     assert!(quantity != 0, EInvalidOutcomesQuantities);
     assert!(liquidity_param != 0, EInvalidLiquidityParam);
     assert!(index < quantities.length(), EInvalidOutcomeQuantityIndex);
 
-    let current_cost = base_cost(quantities, liquidity_param);
+    let current_cost = base_cost(quantities, liquidity_param, decimals);
 
     let mut i = 0;
     let new_quantities = quantities.map!(|current| {
@@ -79,23 +74,18 @@ public fun cost(
         new_quantity
     });
 
-    base_cost(new_quantities, liquidity_param) - current_cost
+    base_cost(new_quantities, liquidity_param, decimals) - current_cost
 }
 
 /// Calculate payout for selling specific number of quantities for given outcome
-public fun payout(
-    index: u64,
-    quantity: u64,
-    quantities: vector<u64>,
-    liquidity_param: u64,
-): u64 {
+public fun payout(index: u64, quantity: u64, quantities: vector<u64>, liquidity_param: u64, decimals: u8): u64 {
     assert!(!quantities.is_empty(), EEmptyOutcomesQuantities);
     assert!(quantity != 0, EInvalidOutcomesQuantities);
     assert!(liquidity_param != 0, EInvalidLiquidityParam);
     assert!(index < quantities.length(), EInvalidOutcomeQuantityIndex);
     assert!(quantities[index] >= quantity, EInvalidOutcomesQuantities);
 
-    let current_cost = base_cost(quantities, liquidity_param);
+    let current_cost = base_cost(quantities, liquidity_param, decimals);
 
     let mut i = 0;
     let new_quantities = quantities.map!(|current| {
@@ -109,7 +99,7 @@ public fun payout(
         new_quantity
     });
 
-    current_cost - base_cost(new_quantities, liquidity_param)
+    current_cost - base_cost(new_quantities, liquidity_param, decimals)
 }
 
 // === Private Functions ===
@@ -165,7 +155,6 @@ macro fun vec_fixed18_sum($values: vector<Fixed18>): Fixed18 {
     values.fold!(fixed18::zero(), |acc, value| acc.add(value))
 }
 
-/// Maximum safe input for exp function (100 * 10^18 in Fixed18 format)
 macro fun max_safe_exp_input(): u256 {
-    100_000_000_000_000_000_000
+    3_394_200_909_562_557_497_344
 }
