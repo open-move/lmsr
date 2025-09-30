@@ -23,28 +23,29 @@ sui move test
 
 ## Usage
 
-```rust
+```move
 use lmsr::lmsr;
 
 // Create market with 3 outcomes
-let liquidity = 1000;  // Higher = more stable prices
-let quantities = vector[100, 100, 100];
+let decimals = 6u8;  // Precision for price calculations
+let liquidity = 1000 * 10u64.pow(decimals);  // Higher = more stable prices
+let quantities = vector::tabulate!(3, |_| 100 * 10u64.pow(decimals));
 
 // Get all prices (sum to 1.0)
-let prices = lmsr::prices(quantities, liquidity);
+let prices = lmsr::prices(quantities, liquidity, decimals);
 
 // Cost to buy 50 shares of outcome 1
-let cost = lmsr::cost(1, 50, quantities, liquidity);
+let cost = lmsr::cost(1, 50, quantities, liquidity, decimals);
 quantities[1] = quantities[1] + 50;
 
 // Payout for selling 20 shares of outcome 1
-let payout = lmsr::payout(1, 20, quantities, liquidity);
+let payout = lmsr::payout(1, 20, quantities, liquidity, decimals);
 ```
 
 ## Functions
 
-- `base_cost(quantities, b)` - Total market cost
-- `price(quantities, index, b)` - Single outcome price
-- `prices(quantities, b)` - All outcome prices
-- `cost(index, amount, quantities, b)` - Buy cost
-- `payout(index, amount, quantities, b)` - Sell payout
+- `base_cost(quantities, b, decimals)` - Total market cost
+- `price(quantities, index, b, decimals)` - Single outcome price
+- `prices(quantities, b, decimals)` - All outcome prices
+- `cost(index, amount, quantities, b, decimals)` - Buy cost
+- `payout(index, amount, quantities, b, decimals)` - Sell payout
