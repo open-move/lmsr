@@ -17,8 +17,8 @@ public fun base_cost(quantities: vector<u64>, liquidity_param: u64, decimals: u8
     assert!(!quantities.is_empty(), EEmptyOutcomesQuantities);
     assert!(liquidity_param != 0, EInvalidLiquidityParam);
 
-    let liquidity_param_scaled = fixed18::from_u64(liquidity_param);
-    let quantities_scaled = quantities.map!(|q| fixed18::from_u64(q));
+    let liquidity_param_scaled = fixed18::u64_to_fixed18(liquidity_param, decimals);
+    let quantities_scaled = quantities.map!(|q| fixed18::u64_to_fixed18(q, decimals));
     liquidity_param_scaled
         .mul_down(log_sum_exp_scaled(quantities_scaled, liquidity_param_scaled))
         .to_u64(decimals)
@@ -29,8 +29,8 @@ public fun price(quantities: vector<u64>, index: u64, liquidity_param: u64, deci
     assert!(liquidity_param != 0, EInvalidLiquidityParam);
     assert!(index < quantities.length(), EInvalidOutcomeQuantityIndex);
 
-    let liquidity_param_scaled = fixed18::from_u64(liquidity_param);
-    let quantities_scaled = quantities.map!(|q| fixed18::from_u64(q));
+    let liquidity_param_scaled = fixed18::u64_to_fixed18(liquidity_param, decimals);
+    let quantities_scaled = quantities.map!(|q| fixed18::u64_to_fixed18(q, decimals));
 
     let (scaled_exps, _) = scaled_exps(quantities_scaled, liquidity_param_scaled);
     scaled_exps[index].div_down(vec_fixed18_sum!(scaled_exps)).to_u64(decimals)
@@ -42,8 +42,8 @@ public fun prices(quantities: vector<u64>, liquidity_param: u64, decimals: u8): 
     assert!(!quantities.is_empty(), EEmptyOutcomesQuantities);
     assert!(liquidity_param != 0, EInvalidLiquidityParam);
 
-    let liquidity_param_scaled = fixed18::from_u64(liquidity_param);
-    let quantities_scaled = quantities.map!(|q| fixed18::from_u64(q));
+    let liquidity_param_scaled = fixed18::u64_to_fixed18(liquidity_param, decimals);
+    let quantities_scaled = quantities.map!(|q| fixed18::u64_to_fixed18(q, decimals));
 
     let (scaled_exps, _) = scaled_exps(quantities_scaled, liquidity_param_scaled);
 

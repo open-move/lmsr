@@ -6,12 +6,11 @@ use std::unit_test::assert_eq;
 
 #[test]
 fun test_base_cost() {
-    let liquidity = 1000;
-    let quantities = vector[100, 100];
     let decimals = 6u8;
+    let scale = 10u64.pow(decimals);
+    let liquidity = 1000 * scale;
+    let quantities = vector[100 * scale, 100 * scale];
     let cost = lmsr::base_cost(quantities, liquidity, decimals);
-
-    std::debug::print(&cost);
 
     // A combination the above parameters should always yield a certain base cost
     assert_eq!(cost, 793147180);
@@ -40,6 +39,9 @@ fun test_prices_summation() {
     let prices = lmsr::prices(quantities, liquidity, decimals);
     let prices_sum = prices.fold!(0, |acc, x| acc + x);
 
+    std::debug::print(&prices);
+    std::debug::print(&(prices_sum+2));
+
     let tolerance = 10; // Allow small rounding error
     let one = 10u64.pow(decimals);
     assert!(prices_sum >= one - tolerance && prices_sum <= one + tolerance);
@@ -47,13 +49,16 @@ fun test_prices_summation() {
 
 #[test]
 fun test_const_difference() {
-    let quantities = vector[100, 100];
-    let liquidity = 1000;
+    let quantities = vector[5_00_000, 5_00_000];
+    let liquidity = 1000 * 1000000;
     let decimals = 6u8;
 
     // Cost for different quantities
-    let cost_10 = lmsr::cost(0, 10, quantities, liquidity, decimals);
-    let cost_20 = lmsr::cost(0, 20, quantities, liquidity, decimals);
+    let cost_10 = lmsr::cost(0, 5_000_000, quantities, liquidity, decimals);
+    let cost_20 = lmsr::cost(0, 7_000_000, quantities, liquidity, decimals);
+    std::debug::print(&cost_10);
+    std::debug::print(&cost_20);
+
     assert!(cost_20 > cost_10);
 }
 
@@ -183,7 +188,7 @@ fun test_increasing_cost_property() {
 
     assert!(cost_10 > cost_5);
     assert!(cost_20 > cost_10);
-    
+
     // Cost per share should increase (convex cost function)
     assert!(cost_10 > 2 * cost_5); // More than double cost for double quantity
 }
@@ -269,8 +274,8 @@ fun test_different_decimal_precisions() {
     let tolerance_6 = 10u64; // 0.00001 tolerance for 6 decimals
     let sum_6 = prices_6.fold!(0, |acc, x| acc + x);
     assert!(sum_6 >= 10u64.pow(6) - tolerance_6 && sum_6 <= 10u64.pow(6) + tolerance_6);
-    
-    let tolerance_9 = 1000u64; // Similar relative tolerance for 9 decimals  
+
+    let tolerance_9 = 1000u64; // Similar relative tolerance for 9 decimals
     let sum_9 = prices_9.fold!(0, |acc, x| acc + x);
     assert!(sum_9 >= 10u64.pow(9) - tolerance_9 && sum_9 <= 10u64.pow(9) + tolerance_9);
 }
@@ -282,17 +287,17 @@ fun test_zero_cost_fails() {
     let quantities = vector[100, 100];
     let liquidity = 1000;
     let decimals = 6u8;
-    
+
     // Try to buy 0 shares (should fail)
     lmsr::cost(0, 0, quantities, liquidity, decimals);
 }
 
-#[test, expected_failure(abort_code = lmsr::EInvalidOutcomesQuantities)] 
+#[test, expected_failure(abort_code = lmsr::EInvalidOutcomesQuantities)]
 fun test_zero_payout_fails() {
     let quantities = vector[100, 100];
     let liquidity = 1000;
     let decimals = 6u8;
-    
+
     // Try to sell 0 shares (should fail)
     lmsr::payout(0, 0, quantities, liquidity, decimals);
 }
@@ -302,7 +307,7 @@ fun test_cost_invalid_index_fails() {
     let quantities = vector[100, 100];
     let liquidity = 1000;
     let decimals = 6u8;
-    
+
     // Try to buy shares for non-existent outcome
     lmsr::cost(5, 10, quantities, liquidity, decimals);
 }
@@ -312,8 +317,8 @@ fun test_payout_invalid_index_fails() {
     let quantities = vector[100, 100];
     let liquidity = 1000;
     let decimals = 6u8;
-    
-    // Try to sell shares for non-existent outcome  
+
+    // Try to sell shares for non-existent outcome
     lmsr::payout(5, 10, quantities, liquidity, decimals);
 }
 
@@ -322,7 +327,7 @@ fun test_large_quantity_overflow() {
     let quantities = vector[18446744073709551615u64]; // Max u64
     let liquidity = 1000;
     let decimals = 6u8;
-    
+
     // Try to buy 1 more share (should overflow)
     lmsr::cost(0, 1, quantities, liquidity, decimals);
 }
@@ -331,7 +336,7 @@ fun test_large_quantity_overflow() {
 fun test_price_zero_liquidity_fails() {
     let quantities = vector[100, 100];
     let decimals = 6u8;
-    
+
     // Try to get price with zero liquidity
     lmsr::price(quantities, 0, 0, decimals);
 }
@@ -340,7 +345,7 @@ fun test_price_zero_liquidity_fails() {
 fun test_prices_zero_liquidity_fails() {
     let quantities = vector[100, 100];
     let decimals = 6u8;
-    
+
     // Try to get prices with zero liquidity
     lmsr::prices(quantities, 0, decimals);
 }
@@ -349,7 +354,7 @@ fun test_prices_zero_liquidity_fails() {
 fun test_cost_zero_liquidity_fails() {
     let quantities = vector[100, 100];
     let decimals = 6u8;
-    
+
     // Try to get cost with zero liquidity
     lmsr::cost(0, 10, quantities, 0, decimals);
 }
@@ -358,7 +363,7 @@ fun test_cost_zero_liquidity_fails() {
 fun test_payout_zero_liquidity_fails() {
     let quantities = vector[100, 100];
     let decimals = 6u8;
-    
+
     // Try to get payout with zero liquidity
     lmsr::payout(0, 10, quantities, 0, decimals);
 }
